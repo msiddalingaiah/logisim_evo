@@ -10,9 +10,11 @@ Combinational logic is made of well known boolean gates such as AND, OR, XOR, NO
 
 Combinational logic can be used exclusively to implement many types of computation, such as addition, subtraction, and even multiplication. In fact all of these types of computation can be built using exclusively NAND or NOR gates.
 
-Sequential logic is *synchronous*, meaning the outputs change in response to the inputs *and* distinct clock signal. Sequential logic has memory, meaning it can maintain state or change state under specific control. Simple sequential logic can be used to build counters, shift registers, or transfer values from one register to another. This last operation is of particular interest when building more complex logical systems, such as CPUs.
+Sequential logic is *synchronous*, meaning the outputs change in response to the inputs *and* a distinct clock signal. Sequential logic has memory, meaning it can maintain state or change state under specific control. Simple sequential logic can be used to build counters, shift registers, or transfer values from one register to another. This last operation is of particular interest when building more complex logical systems, such as CPUs.
 
 In practice, combinational and sequential logic are used together to build arbitrarily complex systems. Much of the abstract [automata theory](https://en.wikipedia.org/wiki/Automata_theory) was developed in the mid 20th century by giants such as [Claude Shannon](https://en.wikipedia.org/wiki/Claude_Shannon), [Edward F. Moore](https://en.wikipedia.org/wiki/Edward_F._Moore), [George H. Mealy](https://en.wikipedia.org/wiki/George_H._Mealy), and of course [Alan Turing](https://en.wikipedia.org/wiki/Alan_Turing), among many others. The formal theory can appear mathematically dense, but it's conceptually simple.
+
+Unfortunately, most treatments of logic design explain combinational logic well, but either fall apart or over theorize when it comes to sequential design. Following a few straightforward, consistent practices results in predictable, high performance designs that are easy to maintain. This is an attempt to document practices I follow that have worked well for me. It starts simple, only assuming basic knowledge of logic gates and binary arithmetic.
 
 ## Tools
 
