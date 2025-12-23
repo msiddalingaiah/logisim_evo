@@ -1,5 +1,5 @@
 # logisim_evo
-A collection of [Logisim Evolution](https://github.com/reds-heig/logisim-evolution) circuits.
+A collection of [Logisim Evolution](https://github.com/logisim-evolution/logisim-evolution) circuits.
 
 Logisim Evolution is an excellent, open source graphical logic simulator.
 
