@@ -22,5 +22,5 @@ TBD
 
 Let's start with a one bit storage element known as a [D-type flip flop](https://en.wikipedia.org/wiki/Flip-flop_(electronics)#D_flip-flop). For the purposes of this discussion, a D-type flip flop is *edge-triggered* meaning the outputs can only change after the rising edge of the clock input. In modern designs, a common, fixed rate clock controls when outputs change. This wasn't always the cases, but it's generally easier to analyze the performance bounds of a system if the clock rate is fixed. Modern tools greatly simplify analysis of what was tediously done by hand. For these reasons, we will focus on single clock, synchronous designs.
 
-![Clock divider](images/Clock_divider.png "Clock Divider")
+![Clock divider](../images/Clock_divider.png "Clock Divider")
 
