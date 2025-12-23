@@ -86,7 +86,7 @@ Shift registers are commonly used in RS-232, USB, and many other serial interfac
 
 ![Shift register](../images/shift_register.png "Shift register")
 
-This is where a common source of confusion comes in. It would seem like the input of each D flip flop in the shift register is changing at the same time as the clock, resulting in a race condition, but that's not exactly true. In practice, the clock to Q propagation delay is greater than the D to clock setup time. It's a natural result of how flip flops are designed. In fact, a discrete master slave flip flop would behave the same way. It means that the D input will always be setup and stable before the rising edge of the clock. This is a critical insight for any type of sequential logic. If you can grok that concept, you are well on your way.
+This is where a common source of confusion comes in. It would seem like the input of each D flip flop in the shift register is changing at the same time as the clock, resulting in a race condition, but that's not exactly true. In practice, the clock to Q propagation delay is greater than the required D hold time after the clock edge. Often, the hold time is zero or even negative. It's a natural result of how flip flops are designed. In fact, a discrete master slave flip flop would behave the same way. It means that the D input will always be sufficiently stable after the rising edge of the clock. This is a critical insight for any type of sequential logic. If you can grok that concept, you are well on your way. Of course setup time must be met, which limits the clock rate.
 
 And the [Verilog equivalent](Verilog/ShiftRegister.v).
 
