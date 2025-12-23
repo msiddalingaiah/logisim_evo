@@ -106,3 +106,4 @@ venv.bak/
 # VCD files
 *.vcd
 *.gtkw
+TestBench

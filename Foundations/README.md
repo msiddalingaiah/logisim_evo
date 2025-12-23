@@ -98,9 +98,9 @@ Below is a diagram of a [synchronous counter](logisim/Sync_counter.circ):
 
 ![Sync counter](../images/Sync_counter.png "Sync counter")
 
-The 8-bit register is a simply a set of D flip flops wired in parallel rather than serial. The clock inputs are all connected together, making is synchronous. The alternative is a [ripple counter](https://www.geeksforgeeks.org/digital-logic/ripple-counter-in-digital-logic/). Ripple counters suffer from propagation delays among other things. They are simpler to build but can be significantly slower than synchronous counters. The clock rate of a synchronous counter is bounded by the propagation delay of the adder, which can be relatively fast if lookahead carry is used. Another benefit is that all outputs change at the same time, which is not true for a ripple counter.
+The 8-bit register is a simply a set of D flip flops wired in parallel rather than serial. The clock inputs are all connected together, making it synchronous. The alternative is a [ripple counter](https://www.geeksforgeeks.org/digital-logic/ripple-counter-in-digital-logic/). Ripple counters suffer from propagation delays among other things. They are simpler to build but can be significantly slower than synchronous counters. The clock rate of a synchronous counter is bounded by the propagation delay of the adder, which can be relatively fast if lookahead carry is used. Another benefit is that all outputs change at the same time, which is not true for a ripple counter.
 
-And the [Verilog equivalent](Verilog/ShiftRegister.v). The logic is only slightly different than the shift register. This illustrates the power of HDLs for large scale logic design. A wider counter would require only a simple change to the register width.
+And the [Verilog equivalent](Verilog/SyncCounter.v). The logic is only slightly different than the shift register. This illustrates the power of HDLs for large scale logic design. A wider counter would require only a simple change to the register width.
 
 The simulation waveform is as expected. Notice undefined values prior to reset, which illustrates why reset is needed:
 
