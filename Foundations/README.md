@@ -52,7 +52,7 @@ The ```@(*)``` in Verilog specifies all signals are included in the *sensitivity
 
 ## Sequential Logic
 
-Let's start with a one bit storage element known as a [D-type flip flop](https://en.wikipedia.org/wiki/Flip-flop_(electronics)#D_flip-flop). For the purposes of this discussion, a D-type flip flop is *edge-triggered* meaning the outputs can only change after the rising edge of the clock input. In modern designs, a common, fixed rate clock controls when outputs change. This wasn't always the cases, but it's generally easier to analyze the performance bounds of a system if the clock rate is fixed. Modern tools greatly simplify analysis of what was tediously done by hand. For these reasons, we will focus on single clock, synchronous designs.
+Let's start with a one bit storage element known as a [D-type flip flop](https://en.wikipedia.org/wiki/Flip-flop_(electronics)#D_flip-flop). For the purposes of this discussion, a D-type flip flop is *edge-triggered* meaning the outputs can only change after the rising edge of the clock input. In modern designs, a common, fixed rate clock controls when outputs change. This wasn't always the cases, but it's generally easier to analyze the performance bounds of a system if the clock rate is fixed. Modern tools greatly simplify analysis of what was once tediously done by hand. For these reasons, we will focus on single clock, synchronous designs.
 
 ### First Example
 
@@ -69,12 +69,22 @@ The [Verilog equivalent](Verilog/ClockDivider.v) introduces the sequential alway
         if (reset == 1) begin
             q <= 0;
         end else begin
-            q <= ~q;
+            q <= d;
         end
     end
 ```
 
 When modeling sequential logic, it is critical to use non-blocking assignments ( <= ). Non-blocking assignments calculate all the right-hand sides of the equations at the beginning of a time step and update the left-hand sides at the end. This correctly models the simultaneous behavior of hardware registers changing state on a clock edge. VHDL is much more consistent in this regard, so many engineers avoid Verilog for this reason.
+
+The combinational always block performs the NOT (inversion) operation from q to d, just like the schematic above:
+
+```
+    always @(*) begin
+        d = ~q;
+    end
+```
+
+This could have been done in the sequential always block, but this explicit form is used to more closely align with the schematic.
 
 The simulation waveform is as expected. Notice undefined values prior to reset, which illustrates why reset is needed:
 
@@ -91,7 +101,7 @@ This is where a common source of confusion comes in. It would seem like the inpu
 The [Verilog equivalent](Verilog/ShiftRegister.v) contains this wiring code:
 
 ```
-q <= { q[0], q[7:1] };
+d = { q[0], q[7:1] };
 ```
 
 You can guess what's happening, which is the same as the wiring in logisim equivalent above. Comma separated values within curly braces represent concatenation in Verilog.
@@ -106,7 +116,7 @@ Below is a diagram of a [synchronous counter](logisim/Sync_counter.circ):
 
 ![Sync counter](../images/Sync_counter.png "Sync counter")
 
-The 8-bit register is a simply a set of D flip flops wired in parallel rather than serial. The clock inputs are all connected together, making it synchronous. The output of the register is fed back to the input through an 8-bit adder. The other input to the adder is set to a constant value of one. On each rising edge of the clock, the register output takes on the previous value plus one. Setting the constant to some other value, such as -1 (all ones in 2's complement form) turns this into a down counter. HDL synthesizers will automatically minimize add by a constant logic, which was once done by hand.
+The 8-bit register is a simply a set of D flip flops with all clock inputs connected together, making it synchronous just like the shift register above. The output of the register is fed back to the input through an 8-bit adder. The other input to the adder is set to a constant value of one. On each rising edge of the clock, the register output takes on the previous value plus one. Setting the constant to some other value, such as -1 (all ones in 2's complement form) turns this into a down counter. HDL synthesizers will automatically minimize add by a constant logic, which was done by hand back in the day. The internal logic of the [74HC161](https://www.ti.com/lit/ds/symlink/sn74hc161.pdf) is more or less implemented this way.
 
 The alternative is a [ripple counter](https://www.geeksforgeeks.org/digital-logic/ripple-counter-in-digital-logic/). Ripple counters suffer from propagation delays among other things. They are simpler to build but can be significantly slower than synchronous counters. The clock rate of a synchronous counter is bounded by the propagation delay of the adder, which can be very fast if lookahead carry is used. Another benefit is that all outputs change at the same time, which is not true for a ripple counter.
 
@@ -118,27 +128,35 @@ The simulation waveform is as expected. Notice undefined values prior to reset, 
 
 ### Fibonacci Sequence
 
-The [Fibonacci sequence](https://en.wikipedia.org/wiki/Fibonacci_sequence) is an infinite sequence where each value is the sum of the two previous values. The equivalent, iterative Python code looks like this:
+The [Fibonacci sequence](https://en.wikipedia.org/wiki/Fibonacci_sequence) is an infinite sequence where each value is the sum of the two previous values like this:
 
 ```
-def fibonacci_iterative(n):
-    a, b = 1, 0
-    for _ in range(n - 1): # Loop n-1 times to reach the nth number
-        temp = a + b
-        b = a
-        a = temp
-    return a
+0, 1, 1, 2, 3, 5, 8...
+```
+
+The equivalent, iterative Python code looks like this:
+
+```
+a = 1
+b = 0
+for i in range(10):
+    print(b)
+    sum = a + b
+    b = a
+    a = sum
 ```
 
 Below is a diagram of a [Fibonacci calculator](logisim/Fibonacci.circ) in hardware:
 
 ![Fibonacci](../images/Fibonacci.png "Fibonacci")
 
-There are two 8-bit registers representing the variables "a" and "b" in the Python code above. The third register is for initialization, which selects the 8-bit value 1 during the first clock cycle after reset and sum of a and b for all subsequent cycles. This is achieved using an 8-bit multiplexer, which selects one of two values depending on the select input. Multiplexers are commonly used to route inputs to registers. You might notice I cheated a bit and didn't initialize register b properly. I was tool lazy to wire up another multiplexer. It's not a big deal since it does the right thing after another cycle. It's easy to fix in Verilog, as we'll see.
+There are two 8-bit registers representing the variables "a" and "b" in the Python code above. The third register is for initialization, which selects the 8-bit value 1 during the first clock cycle after reset and sum of a and b for all subsequent cycles. This is achieved using an 8-bit multiplexer, which selects one of two values depending on the select input. Multiplexers are commonly used to route inputs to registers.
 
-For each clock cycle, the a and b registers update simultaneously in parallel. This demonstrates the potential parallelism that can be achieved in hardware that often implemented serially in software. The next value can be computed in one cycle, which it would typically require several cycles in software.
+For each clock cycle, the a and b registers update simultaneously in parallel. This demonstrates the parallelism that can be achieved in hardware that often implemented serially in software. The next value can be computed in one cycle, which would typically require several cycles in software.
 
-The [Verilog equivalent](Verilog/Fibonacci.v) uses both combinational and sequential always blocks. The combinational block computes the sum of a and b, while the sequential block updates the register values. These two lines in the sequential block could be written in either order, the result is the same:
+The [Verilog equivalent](Verilog/Fibonacci.v) is very similar to the previous examples, with the addition of another register. Each register bit generally maps to one logic element (LE) or configurable logic block (CLB) in an FPGA. Small FPGAs might contain about [1000 logic elements](https://www.latticesemi.com/en/Products/FPGAandCPLD/iCE40), while the largest can contain over [one million LEs](https://www.altera.com/products/fpga/stratix/10/gx). That gives you an idea how much logic you can fit into a given FPGA. FPGAs contain many other resources, such as block RAM, multiplier cores, high speed serial interfaces for performance and improved resource utilization. We'll use some of those resources later.
+
+Unlike the software example in Python, these two lines in the Verilog sequential block could be written in either order, the result is the same:
 
 ```
 a <= sum;
@@ -152,17 +170,31 @@ b <= a;
 a <= sum;
 ```
 
-In both cases, the outputs of the registers take on the values of their inputs on the rising edge of the clock. Since their input values are already defined and stable prior to the clock edge, the order of these two statements does not matter.
+In both cases, the outputs of the registers take on the values of their inputs on the rising edge of the clock. Since their input values are already defined and stable prior to the clock edge, the order of these two statements does not matter. Even though Hardware Description Languages (HDLs) look like software code, they behave differently. HDLs model state changes over time in response to changing inputs, simulating the parallel nature of real hardware. Software is generally sequential in nature, which makes it much easier to develop and reason about. Once you grasp the fundamental difference, it's easy to go back and forth between software and HDLs.
 
 The simulation waveform is as expected. Notice undefined values prior to reset, which illustrates why reset is needed:
 
 ![Fibonacci waveform](../images/Fibonacci_wave.png "Fibonacci waveform")
 
-As you can see, the output of register b is the same as register a delayed by one clock cycle. It's an example of [pipelining](https://en.wikipedia.org/wiki/Pipeline_(computing)), which is common in hardware designs. It's like an assembly line where different operations are performed in parallel.
+Notice the output of register b is the same as register a delayed by one clock cycle. It's an example of [pipelining](https://en.wikipedia.org/wiki/Pipeline_(computing)), which is common in hardware designs. It's like an assembly line where different operations are performed in parallel.
 
 ### A Simple CPU
 
-Coming soon!
+In his 1948 essay, "Intelligent Machinery", Alan M. Turing described a [universal computing machine](https://en.wikipedia.org/wiki/Turing_machine) consisting of an unlimited memory capacity obtained in the form of an infinite tape. This theoretical machine also contained a rulebook or set of instructions to direct the machine to move a read/write head left or right, read or write a symbol at the current location, and test the value of a symbol at the current location. Turing showed that these simple operations, while plodding and slow by modern standards, are all that are needed for universal computation. In fact, it's so simple that any machine that contains these minimal operations in any form is computationally equivalent and are called [Turing Complete](https://en.wikipedia.org/wiki/Turing_completeness). The video below is a physical model of a Turing machine for demonstration purposes:
+
+[![Turing Machine](https://upload.wikimedia.org/wikipedia/commons/0/03/Turing_Machine_Model_Davey_2012.jpg =250x)](https://www.youtube.com/watch?v=E3keLeMwfHY)
+
+Strictly speaking, modern CPUs are [Linear Bounded Automatons](https://en.wikipedia.org/wiki/Linear_bounded_automaton) due to finite memory. For practical purposes, they are usually called Turing Complete, meaning they are all equivalent in computation capability. We intuitively know that a 6502 from 1976 can do anything that a modern multi-core Pentium can do today, although not nearly as fast!
+
+Given this simple model, it's actually very easy to make a Turing complete CPU. All it requires is random access memory (a tape), a few basic operations (read, write, test, jump), and a rulebook describing operations to be executed in sequence (instructions). All of this can be built up using the primitives developed earlier. The diagram below illustrates the relationship between the simplest automata (combinational logic) and the most complex (Turing machines).
+
+![Automata Theory](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Automata_theory.svg/330px-Automata_theory.svg.png)
+
+ The counter, shift register, and Fibonacci calculator above were all [finite state machines](https://en.wikipedia.org/wiki/Finite-state_machine), meaning they simply move from one state to another based on fixed logic. They are not capable of reading and executing instructions from a rulebook. Still, they can be surprisingly powerful. In fact, early video games such as [Atari Pong](https://www.arcade-museum.com/manuals-videogames/P/PongSchematics.pdf) were sophisticated state machines made from discrete TTL logic, no microprocessor involved! Memory in those days was expensive, so state machines made economic sense in these applications.
+
+We will skip over the [pushdown automaton](https://en.wikipedia.org/wiki/Pushdown_automaton) as it's not relavent to our goals here, but I encourage you to learn about it. It's a facinating subject.
+
+Stay tuned!
 
 ## Verilog Best Practices
 

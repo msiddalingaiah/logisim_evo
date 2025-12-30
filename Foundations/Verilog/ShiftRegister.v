@@ -8,16 +8,21 @@
 
 // Circular shift register
 module ShiftRegister(input wire reset, input wire clock, output wire [7:0] out);
-    reg [7:0] q;
+    reg [7:0] d, q;
 
     assign out = q;
+
+    // Guideline #3: When modeling combinational logic with an "always" block, use blocking assignments ( = ).
+    always @(*) begin
+        d = { q[0], q[7:1] };
+    end
 
     // Guideline #1: When modeling sequential logic, use nonblocking assignments ( <= ).
     always @(posedge clock) begin
         if (reset == 1) begin
             q <= 8'h80;
         end else begin
-            q <= { q[0], q[7:1] };
+            q <= d;
         end
     end
 endmodule

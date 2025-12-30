@@ -8,16 +8,21 @@
 
 // Divide clock by two using a D flip flop
 module ClockDivider(input wire reset, input wire clock, output wire out);
-    reg q;
+    reg d, q;
 
     assign out = q;
+
+    // Guideline #3: When modeling combinational logic with an "always" block, use blocking assignments ( = ).
+    always @(*) begin
+        d = ~q;
+    end
 
     // Guideline #1: When modeling sequential logic, use nonblocking assignments ( <= ).
     always @(posedge clock) begin
         if (reset == 1) begin
             q <= 0;
         end else begin
-            q <= ~q;
+            q <= d;
         end
     end
 endmodule

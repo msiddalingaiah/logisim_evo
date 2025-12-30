@@ -9,7 +9,7 @@
 // A synchronous counter
 module Fibonacci(input wire reset, input wire clock, output wire [7:0] out);
     reg [7:0] a, b, sum;
-    assign out = a;
+    assign out = b;
 
     // Guideline #3: When modeling combinational logic with an "always" block, use blocking assignments ( = ).
     always @(*) begin
@@ -20,7 +20,7 @@ module Fibonacci(input wire reset, input wire clock, output wire [7:0] out);
     always @(posedge clock) begin
         if (reset == 1) begin
             a <= 8'h01;
-            b <= 8'h01;
+            b <= 8'h00;
         end else begin
             a <= sum;
             b <= a;
