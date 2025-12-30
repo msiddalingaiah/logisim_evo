@@ -182,7 +182,7 @@ Notice the output of register b is the same as register a delayed by one clock c
 
 In his 1948 essay, "Intelligent Machinery", Alan M. Turing described a [universal computing machine](https://en.wikipedia.org/wiki/Turing_machine) consisting of an unlimited memory capacity obtained in the form of an infinite tape. This theoretical machine also contained a rulebook or set of instructions to direct the machine to move a read/write head left or right, read or write a symbol at the current location, and test the value of a symbol at the current location. Turing showed that these simple operations, while plodding and slow by modern standards, are all that are needed for universal computation. In fact, it's so simple that any machine that contains these minimal operations in any form is computationally equivalent and are called [Turing Complete](https://en.wikipedia.org/wiki/Turing_completeness). The video below is a physical model of a Turing machine for demonstration purposes:
 
-![Turing Machine](https://upload.wikimedia.org/wikipedia/commons/0/03/Turing_Machine_Model_Davey_2012.jpg =250x)
+<img src="https://upload.wikimedia.org/wikipedia/commons/0/03/Turing_Machine_Model_Davey_2012.jpg" width="300">
 
 [Video](https://www.youtube.com/watch?v=E3keLeMwfHY)
 
