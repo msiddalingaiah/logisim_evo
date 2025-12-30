@@ -8,7 +8,7 @@ Logic design can be divided into two broad categories:
 
 Combinational logic is made of well known boolean gates such as AND, OR, XOR, NOT, NAND, NOR etc. Combinational logic is *asynchronous*, meaning the output of combinational logic changes directly in response to any input, it has no memory. In practice some small propagation delay is present, typically on the order of nanoseconds depending on logic family, output load, supply voltage, etc.
 
-Combinational logic can be used exclusively to implement many types of computation, such as addition, subtraction, and even multiplication. In fact all of these types of computation can be built using exclusively NAND or NOR gates.
+Combinational logic can be used exclusively to implement many types of computation, such as addition, subtraction, and even multiplication. In fact all of these types of computation can be built using exclusively NAND or NOR gates. As a practical example, the [Apollo Guidance Computer](https://en.wikipedia.org/wiki/Apollo_Guidance_Computer) was built entirely using about 4100 three-input NOR gates.
 
 Sequential logic is *synchronous*, meaning the outputs change in response to the inputs *and* a distinct clock signal. Sequential logic has memory, meaning it can maintain state or change state under specific control. Simple sequential logic can be used to build counters, shift registers, or transfer values from one register to another. This last operation is of particular interest when building more complex logical systems, such as CPUs.
 
@@ -60,7 +60,7 @@ A basic clock divider is easily built using a flip flop and an inverter, picture
 
 ![Clock divider](../images/Clock_divider.png "Clock Divider")
 
-The [logisim divider](logisim/Clock_divider.circ) is available for experimentation. Notice the output only changes when the input button is pressed during simulation (use the finger tool to press the button). A button press simulates the rising edge of the clock. The Q output of the D flip flop takes the value of the D input just after the rising edge of the clock. The datasheet for discrete flip flops list the minimum and maximum propagation delay from clock to Q output. Similarly, there are setup of hold times for the D input. For the D flip flop to operate correctly, the D input must be stable before the setup time and after the hold time relative to the clock. These values plus propagation delays define the upper bound of the clock frequency.
+The [logisim divider](logisim/Clock_divider.circ) is available for experimentation. Notice the output only changes when the input button is pressed during simulation (use the finger tool to press the button). A button press simulates the rising edge of the clock. The Q output of the D flip flop takes the value of the D input just after the rising edge of the clock. The datasheet for discrete flip flops list the minimum and maximum propagation delay from clock to Q output. Similarly, there are setup of hold times for the D input. For the D flip flop to operate correctly, the D input must be stable before the setup time and after the hold time relative to the clock rising edge. These values plus propagation delays define the upper bound of the clock frequency.
 
 The [Verilog equivalent](Verilog/ClockDivider.v) introduces the sequential always block, executing only on the positive edge of the clock:
 
@@ -86,9 +86,15 @@ Shift registers are commonly used in RS-232, USB, and many other serial interfac
 
 ![Shift register](../images/shift_register.png "Shift register")
 
-This is where a common source of confusion comes in. It would seem like the input of each D flip flop in the shift register is changing at the same time as the clock, resulting in a race condition, but that's not exactly true. In practice, the clock to Q propagation delay is greater than the required D hold time after the clock edge. Often, the hold time is zero or even negative. It's a natural result of how flip flops are designed. In fact, a discrete master slave flip flop would behave the same way. It means that the D input will always be sufficiently stable after the rising edge of the clock. This is a critical insight for any type of sequential logic. If you can grok that concept, you are well on your way. Of course setup time must be met, which limits the clock rate.
+This is where a common source of confusion comes in. It would seem like the input of each D flip flop in the shift register is changing at the same time as the clock, resulting in a race condition, but that's not exactly true. In practice, the clock to Q propagation delay is greater than the required D hold time after the clock edge. Often, the hold time is zero or even negative. It's a natural result of how flip flops are designed. In fact, a discrete master slave flip flop made from NAND gates or even individual transistors would behave the same way. It means that the D input will always be sufficiently stable before and after the rising edge of the clock. This is a critical insight for any type of sequential logic. If you can grok that concept, you are well on your way. Of course setup time must be met, which limits the clock rate.
 
-And the [Verilog equivalent](Verilog/ShiftRegister.v).
+The [Verilog equivalent](Verilog/ShiftRegister.v) contains this wiring code:
+
+```
+q <= { q[0], q[7:1] };
+```
+
+You can guess what's happening, which is the same as the wiring in logisim equivalent above. Comma separated values within curly braces represent concatenation in Verilog.
 
 The simulation waveform is as expected. Notice undefined values prior to reset, which illustrates why reset is needed:
 
@@ -100,7 +106,7 @@ Below is a diagram of a [synchronous counter](logisim/Sync_counter.circ):
 
 ![Sync counter](../images/Sync_counter.png "Sync counter")
 
-The 8-bit register is a simply a set of D flip flops wired in parallel rather than serial. The clock inputs are all connected together, making it synchronous. The alternative is a [ripple counter](https://www.geeksforgeeks.org/digital-logic/ripple-counter-in-digital-logic/). Ripple counters suffer from propagation delays among other things. They are simpler to build but can be significantly slower than synchronous counters. The clock rate of a synchronous counter is bounded by the propagation delay of the adder, which can be relatively fast if lookahead carry is used. Another benefit is that all outputs change at the same time, which is not true for a ripple counter.
+The 8-bit register is a simply a set of D flip flops wired in parallel rather than serial. The clock inputs are all connected together, making it synchronous. The alternative is a [ripple counter](https://www.geeksforgeeks.org/digital-logic/ripple-counter-in-digital-logic/). Ripple counters suffer from propagation delays among other things. They are simpler to build but can be significantly slower than synchronous counters. The clock rate of a synchronous counter is bounded by the propagation delay of the adder, which can be very fast if lookahead carry is used. Another benefit is that all outputs change at the same time, which is not true for a ripple counter.
 
 And the [Verilog equivalent](Verilog/SyncCounter.v). The logic is only slightly different than the shift register. This illustrates the power of HDLs for large scale logic design. A wider counter would require only a simple change to the register width.
 
@@ -126,7 +132,7 @@ Below is a diagram of a [Fibonacci calculator](logisim/Fibonacci.circ) in hardwa
 
 ![Fibonacci](../images/Fibonacci.png "Fibonacci")
 
-There are two 8-bit registers representing the variables "a" and "b" in the Python code above. The third register is for initialization, which selects the 8-bit value 1 during the first clock cycle after reset and sum of a and b for all subsequent cycles. This is achieved using an 8-bit multiplexer, which selects one of two values depending on the select input. Multiplexors are commonly used to route inputs to registers.
+There are two 8-bit registers representing the variables "a" and "b" in the Python code above. The third register is for initialization, which selects the 8-bit value 1 during the first clock cycle after reset and sum of a and b for all subsequent cycles. This is achieved using an 8-bit multiplexer, which selects one of two values depending on the select input. Multiplexors are commonly used to route inputs to registers. You might notice I cheated a bit and didn't initialize register b properly. I was tool lazy to wire up another multiplexor. It's not a big deal since it does the right thing after another cycle. It's easy to fix in Verilog, as we'll see.
 
 For each clock cycle, the a and b registers update simultaneously in parallel. This demonstrates the potential parallelism that can be achieved in hardware that often implemented serially in software. The next value can be computed in one cycle, which it would typically require several cycles in software.
 
@@ -155,3 +161,13 @@ As you can see, the output of register b is the same as register a delayed by on
 ### A Simple CPU
 
 Coming soon!
+
+## Verilog Best Practices
+
+Verilog can be unforgiving and confusing, which is why some engineers prefer VHDL. VHDL symantics are superior in my opinion, but tends to be more syntactically verbose. Here are some best practices to avoid common problems.
+
+1. Avoid [combinational loops](https://vlsi-soc.blogspot.com/2013/05/combinational-loops.html). Hardware design is not like software. You should not assign a register to itself (or some combination version of itself) in a combinational block. It can lead to non-deterministic behavior. There are some unusual cases where they might be useful, but in general, it's not what you want.
+
+2. Use ```=``` for assignment in combinational (```always @(*)```) blocks. Conversely, use ```<=``` for assignment in sequential blocks (```always @(posedge clock)```).
+
+3. I prefer to use one combinational block and one sequential block in each module. You don't have to do it this way, but I prefer to keep things simple and consistent.
