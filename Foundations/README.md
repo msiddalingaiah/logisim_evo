@@ -120,7 +120,13 @@ The 8-bit register is a simply a set of D flip flops with all clock inputs conne
 
 The alternative is a [ripple counter](https://www.geeksforgeeks.org/digital-logic/ripple-counter-in-digital-logic/). Ripple counters suffer from propagation delays among other things. They are simpler to build but can be significantly slower than synchronous counters. The clock rate of a synchronous counter is bounded by the propagation delay of the adder, which can be very fast if lookahead carry is used. Another benefit is that all outputs change at the same time, which is not true for a ripple counter.
 
-And the [Verilog equivalent](Verilog/SyncCounter.v). The logic is only slightly different than the shift register. This illustrates the power of HDLs for large scale logic design. A wider counter would require only a simple change to the register width.
+Here is the [Verilog equivalent](Verilog/SyncCounter.v). The logic is only slightly different than the shift register. This illustrates the power of HDLs for large scale logic design. A wider counter would require only a simple change to the register width. Use caution when adding unsized integer literals in Verilog. A number like 5 or 21 defaults to a 32-bit signed integer, which might result in a warning during synthesis or worse. It's best to use explicit bit widths to avoid ambiguity or unexpected behavior:
+
+```
+d = q + 8'd1;
+```
+
+In an assignment, the width of the variable on the left-hand side (LHS) determines the overall width of the expression on the right-hand side (RHS). All operands on the RHS are extended (widened) to match the LHS width before the operation is performed. Here is a good page explaining [numbers in Verilog](https://projectf.io/posts/numbers-in-verilog/).
 
 The simulation waveform is as expected. Notice undefined values prior to reset, which illustrates why reset is needed:
 
@@ -180,7 +186,7 @@ Notice the output of register b is the same as register a delayed by one clock c
 
 ### A Simple CPU
 
-In his 1948 essay, "Intelligent Machinery", Alan M. Turing described a [universal computing machine](https://en.wikipedia.org/wiki/Turing_machine) consisting of an unlimited memory capacity obtained in the form of an infinite tape. This theoretical machine also contained a rulebook or set of instructions to direct the machine to move a read/write head left or right, read or write a symbol at the current location, and test the value of a symbol at the current location. Turing showed that these simple operations, while plodding and slow by modern standards, are all that are needed for universal computation. In fact, it's so simple that any machine that contains these minimal operations in any form is computationally equivalent and are called [Turing Complete](https://en.wikipedia.org/wiki/Turing_completeness). The video below is a physical model of a Turing machine for demonstration purposes:
+In his 1948 essay, "Intelligent Machinery", Alan M. Turing described a [universal computing machine](https://en.wikipedia.org/wiki/Turing_machine) consisting of an unlimited memory capacity obtained in the form of an infinite tape. This theoretical machine also contained a rulebook or set of instructions to direct the machine to move a read/write head left or right, read or write a symbol at the current location, and test the value of a symbol at the current location. Turing showed that these simple operations, while plodding and slow by modern standards, are all that are needed for universal computation. In fact, it's so simple that any machine that contains these minimal operations in any form is computationally equivalent and is called [Turing Complete](https://en.wikipedia.org/wiki/Turing_completeness). The video below is a physical model of a Turing machine for demonstration purposes:
 
 <img src="https://upload.wikimedia.org/wikipedia/commons/0/03/Turing_Machine_Model_Davey_2012.jpg" width="300">
 
@@ -192,9 +198,9 @@ Given this simple model, it's actually very easy to make a Turing complete CPU. 
 
 ![Automata Theory](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Automata_theory.svg/330px-Automata_theory.svg.png)
 
- The counter, shift register, and Fibonacci calculator above were all [finite state machines](https://en.wikipedia.org/wiki/Finite-state_machine), meaning they simply move from one state to another based on fixed logic. They are not capable of reading and executing instructions from a rulebook. Still, they can be surprisingly powerful. In fact, early video games such as [Atari Pong](https://www.arcade-museum.com/manuals-videogames/P/PongSchematics.pdf) were sophisticated state machines made from discrete TTL logic, no microprocessor involved! Memory in those days was expensive, so state machines made economic sense in these applications.
+ The counter, shift register, and Fibonacci calculator above were all [finite state machines](https://en.wikipedia.org/wiki/Finite-state_machine), meaning they simply move from one state to another based on fixed logic. They are not capable of reading and executing instructions from a rulebook, so they are not Turing complete. Still, they can be surprisingly powerful. In fact, early video games such as [Atari Pong](https://www.arcade-museum.com/manuals-videogames/P/PongSchematics.pdf) were sophisticated state machines made from discrete TTL logic, no microprocessor involved! Memory in those days was expensive, so state machines made economic sense in these cost critical applications.
 
-We will skip over the [pushdown automaton](https://en.wikipedia.org/wiki/Pushdown_automaton) as it's not relavent to our goals here, but I encourage you to learn about it. It's a facinating subject.
+We will skip over the [pushdown automaton](https://en.wikipedia.org/wiki/Pushdown_automaton) as it's not relevant to our goals here, but I encourage you to learn about it. It's a facinating subject.
 
 Stay tuned!
 
@@ -207,3 +213,29 @@ Verilog can be unforgiving and confusing, which is why some engineers prefer VHD
 2. Use ```=``` for assignment in combinational (```always @(*)```) blocks. Conversely, use ```<=``` for assignment in sequential blocks (```always @(posedge clock)```).
 
 3. I prefer to use one combinational block and one sequential block in each module. You don't have to do it this way, but I prefer to keep things simple and consistent.
+
+4. Explicitly specify bit widths. Unsized integer literals, e.g. numbers such as 5 or 21 default to 32 bit signed integers in Verilog. When comparing two operands of different widths, the shorter operand is automatically **widened to match the width of the longer operand**. This can result in unintended resource utilization. For example, an 8-bit register compared with an unsized integer literal is inefficient, as shown below:
+
+```
+reg [7:0] an_8_bit_reg;
+
+always @(posedge clock) begin
+    if (an_8_bit_reg <= 21) begin // an_8_bit_reg is widened to 32 bits because 21 is a 32-bit signed integer
+    ...
+    end
+end
+```
+
+The code above will synthesize a 32-bit comparator when an 8-bit comparator is sufficient, wasting resources. Use sized literals to be avoid unintended behavior:
+
+```
+reg [7:0] an_8_bit_reg;
+
+always @(posedge clock) begin
+    if (an_8_bit_reg <= 8'd21) begin // compare two 8-bit values
+    ...
+    end
+end
+```
+
+Here is a good page explaining [numbers in Verilog](https://projectf.io/posts/numbers-in-verilog/).

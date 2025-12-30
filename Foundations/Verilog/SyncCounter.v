@@ -14,7 +14,7 @@ module SyncCounter(input wire reset, input wire clock, output wire [7:0] out);
 
     // Guideline #3: When modeling combinational logic with an "always" block, use blocking assignments ( = ).
     always @(*) begin
-        d = q + 1;
+        d = q + 8'd1;
     end
 
     // Guideline #1: When modeling sequential logic, use nonblocking assignments ( <= ).
