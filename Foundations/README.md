@@ -107,3 +107,45 @@ And the [Verilog equivalent](Verilog/SyncCounter.v). The logic is only slightly 
 The simulation waveform is as expected. Notice undefined values prior to reset, which illustrates why reset is needed:
 
 ![Counter waveform](../images/sync_counter_wave.png "Counter waveform")
+
+### Fibonacci Sequence
+
+The [Fibonacci sequence](https://en.wikipedia.org/wiki/Fibonacci_sequence) is an infinite sequence where each value is the sum of the two previous values. The equivalent, iterative Python code looks like this:
+
+```
+def fibonacci_iterative(n):
+    a, b = 1, 0
+    for _ in range(n - 1): # Loop n-1 times to reach the nth number
+        temp = a + b
+        b = a
+        a = temp
+    return a
+```
+
+Below is a diagram of a [Fibonacci calcualtor](logisim/Fibonacci.circ) in hardware:
+
+![Fibonacci](../images/Fibonacci.png "Fibonacci")
+
+There are two 8-bit registers representing the variables "a" and "b" in the Python code above. The third register is for initialization, which selects the 8-bit value 1 during the first clock cycle after reset and sum of a and b for all subsequent cycles. This is achieved using an 8-bit multiplexer, which selects one of two values depending on the select input. Multiplexors are commonly used to route inputs to registers.
+
+For each clock cycle, the a and b registers update simultaneously in parallel. This demonstrates the potential parallelism that can be achieved in hardware that often implemented serially in software. The next value can be computed in one cycle, which it would typically require several cycles in software.
+
+And the [Verilog equivalent](Verilog/Fibonacci.v). This example uses both combinational and sequential always blocks. The combinational block computes the sum of a and b, while the sequential block updates the register values. These two lines in the sequential block could be written in either order, the result is the same:
+
+```
+a <= sum;
+b <= a;
+```
+
+or
+
+```
+b <= a;
+a <= sum;
+```
+
+In both cases, the outputs of the registers take on the values of their inputs on the rising edge of the clock. Since their input values are already defined and stable prior to the clock edge, the order of these two statements does not matter.
+
+The simulation waveform is as expected. Notice undefined values prior to reset, which illustrates why reset is needed:
+
+![Fibonacci waveform](../images/Fibonacci_wave.png "Fibonacci waveform")

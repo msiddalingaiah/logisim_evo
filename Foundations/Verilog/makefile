@@ -17,6 +17,10 @@ counter: SyncCounter.v
 	iverilog -g2009 -o vcd/TestBench SyncCounter.v
 	vvp vcd/TestBench
 
+fibonacci: Fibonacci.v
+	iverilog -g2009 -o vcd/TestBench Fibonacci.v
+	vvp vcd/TestBench
+
 run:
 	vvp vcd/TestBench
 
