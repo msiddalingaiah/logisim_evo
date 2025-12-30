@@ -122,7 +122,7 @@ def fibonacci_iterative(n):
     return a
 ```
 
-Below is a diagram of a [Fibonacci calcualtor](logisim/Fibonacci.circ) in hardware:
+Below is a diagram of a [Fibonacci calculator](logisim/Fibonacci.circ) in hardware:
 
 ![Fibonacci](../images/Fibonacci.png "Fibonacci")
 
@@ -130,7 +130,7 @@ There are two 8-bit registers representing the variables "a" and "b" in the Pyth
 
 For each clock cycle, the a and b registers update simultaneously in parallel. This demonstrates the potential parallelism that can be achieved in hardware that often implemented serially in software. The next value can be computed in one cycle, which it would typically require several cycles in software.
 
-And the [Verilog equivalent](Verilog/Fibonacci.v). This example uses both combinational and sequential always blocks. The combinational block computes the sum of a and b, while the sequential block updates the register values. These two lines in the sequential block could be written in either order, the result is the same:
+The [Verilog equivalent](Verilog/Fibonacci.v) uses both combinational and sequential always blocks. The combinational block computes the sum of a and b, while the sequential block updates the register values. These two lines in the sequential block could be written in either order, the result is the same:
 
 ```
 a <= sum;
@@ -149,3 +149,9 @@ In both cases, the outputs of the registers take on the values of their inputs o
 The simulation waveform is as expected. Notice undefined values prior to reset, which illustrates why reset is needed:
 
 ![Fibonacci waveform](../images/Fibonacci_wave.png "Fibonacci waveform")
+
+As you can see, the output of register b is the same as register a delayed by one clock cycle. It's an example of [pipelining](https://en.wikipedia.org/wiki/Pipeline_(computing)), which is common in hardware designs. It's like an assembly line where different operations are performed in parallel.
+
+### A Simple CPU
+
+Coming soon!
